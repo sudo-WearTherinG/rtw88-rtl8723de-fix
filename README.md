@@ -1,7 +1,7 @@
 # rtw88-rtl8723de-fix
 > "Keeping the Realtek RTL8723DE chip awake and alive on Linux. No more sleep glitches. No more streaming lag."
 
-# Universal Realtek rtw88 Wi-Fi Fix for Linux
+# Universal Realtek rtw88 Wi-Fi Fix for Linux & Windows
 
 An automated interactive shell script designed to permanently fix intermittent Wi-Fi speed drops, video streaming cache freezes, and warm reboot initialization failures for Realtek **rtw88** family combo cards (`RTL8723DE`, `RTL8821CE`, `RTL8822CE`, `RTL8822BE`).
 
