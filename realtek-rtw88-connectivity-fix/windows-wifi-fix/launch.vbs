@@ -1,0 +1,1 @@
+CreateObject("Wscript.Shell").Run "powershell.exe -NoProfile -ExecutionPolicy Bypass -File """ & CreateObject("Scripting.FileSystemObject").GetParentFolderName(Wscript.ScriptPosition) & "\wifi-heartbeat.ps1""", 0, False
