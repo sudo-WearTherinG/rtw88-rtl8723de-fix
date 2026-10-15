@@ -1,10 +1,14 @@
 #!/bin/bash
 
+# Detect the actual user behind sudo
+REAL_USER=${SUDO_USER:-$USER}
+REAL_HOME=$(eval echo ~$REAL_USER)
+
 # Check if user provided an argument
 ACTION=$1
 
 if [ "$ACTION" == "install" ]; then
-    echo "⚙️ Setting up automated Omarchy Wi-Fi fix for HP 15-da..."
+    echo "⚙️ Setting up automated Linux Wi-Fi fix for RTL8723DE..."
 
     # 1. Block hardware-level PCIe sleep glitches
     echo -e "options rtw88_core disable_lps_deep=y\noptions rtw88_pci disable_aspm=y" | sudo tee /etc/modprobe.d/rtw88.conf
@@ -34,10 +38,10 @@ EOF
     sudo systemctl enable wifi-clear-reboot.service
 
     # 4. Create the hidden configuration directory for the ping script
-    mkdir -p ~/.config/autostart
+    sudo -u "$REAL_USER" mkdir -p "$REAL_HOME/.config/autostart"
 
     # 5. Create the hidden background heartbeat script (Fixes the 1Mbps video drop)
-    cat << 'EOF' > ~/.config/wifi-keepalive.sh
+    sudo -u "$REAL_USER" tee "$REAL_HOME/.config/wifi-keepalive.sh" << 'EOF' > /dev/null
 #!/bin/bash
 while true; do
   TARGET_IP=$(ip route | awk '/default/ {print $3}')
@@ -48,13 +52,13 @@ while true; do
 done
 EOF
 
-    chmod +x ~/.config/wifi-keepalive.sh
+    sudo -u "$REAL_USER" chmod +x "$REAL_HOME/.config/wifi-keepalive.sh"
 
     # 6. Set up the system desktop startup launcher
-    cat << EOF > ~/.config/autostart/wifi-keepalive.desktop
+    sudo -u "$REAL_USER" tee "$REAL_HOME/.config/autostart/wifi-keepalive.desktop" << EOF > /dev/null
 [Desktop Entry]
 Type=Application
-Exec=$HOME/.config/wifi-keepalive.sh
+Exec=$REAL_HOME/.config/wifi-keepalive.sh
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
@@ -62,9 +66,9 @@ Name=Wi-Fi Keepalive
 Comment=Prevents Realtek Wi-Fi drops
 EOF
 
-    # Launch it immediately
+    # Launch it immediately under the real logged-in user account
     pkill -f wifi-keepalive.sh
-    ~/.config/wifi-keepalive.sh &
+    sudo -u "$REAL_USER" nohup "$REAL_HOME/.config/wifi-keepalive.sh" >/dev/null 2>&1 &
 
     echo "✅ Full master script configuration applied."
 
@@ -82,8 +86,8 @@ elif [ "$ACTION" == "remove" ]; then
     # 3. Delete all created configuration and script files
     sudo rm -f /etc/modprobe.d/rtw88.conf
     sudo rm -f /etc/NetworkManager/conf.d/wifi-powersave-off.conf
-    rm -f ~/.config/wifi-keepalive.sh
-    rm -f ~/.config/autostart/wifi-keepalive.desktop
+    rm -f "$REAL_HOME/.config/wifi-keepalive.sh"
+    rm -f "$REAL_HOME/.config/autostart/wifi-keepalive.desktop"
 
     # 4. Restart NetworkManager to load default settings
     sudo systemctl restart NetworkManager
@@ -92,7 +96,7 @@ elif [ "$ACTION" == "remove" ]; then
 
 elif [ "$ACTION" == "check" ]; then
     echo -e "\n--- 📄 Checking Configuration Files ---"
-    for file in "/etc/modprobe.d/rtw88.conf" "/etc/NetworkManager/conf.d/wifi-powersave-off.conf" "$HOME/.config/wifi-keepalive.sh" "$HOME/.config/autostart/wifi-keepalive.desktop" "/etc/systemd/system/wifi-clear-reboot.service"; do
+    for file in "/etc/modprobe.d/rtw88.conf" "/etc/NetworkManager/conf.d/wifi-powersave-off.conf" "$REAL_HOME/.config/wifi-keepalive.sh" "$REAL_HOME/.config/autostart/wifi-keepalive.desktop" "/etc/systemd/system/wifi-clear-reboot.service"; do
         if [ -f "$file" ]; then
             ls -la "$file"
         else
