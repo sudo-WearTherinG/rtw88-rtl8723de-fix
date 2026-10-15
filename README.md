@@ -16,7 +16,7 @@ Modern streaming players (like YouTube, Netflix, or standard HTML5 players) use 
 
 During this quiet window, the network line falls completely silent. The default `rtw88` driver architecture misinterprets this silence as system idleness. To save power, the driver forces the card into a low-power mode and downshifts the receiving speed limit to **exactly 1.0 MBit/s** (the minimum fallback rate of legacy 802.11b). When the video player tries to wake the card back up to download the next chunk, the card responds too slowly, packets get backed up in the internal transmission queue, and the video stalls indefinitely. 
 
-`"I noticed that disconnecting and reconnecting the Wi-Fi fixes the lag right away, but it's only a temporary band-aid. The issue keeps coming back, forcing you to manually reconnect over and over again."`
+> 💡 **The Band-Aid Workaround:** In this state, a simple manual disconnect and reconnect of the Wi-Fi fixes the lag right away, but it is only a temporary band-aid. The issue keeps coming back the next time the network goes quiet, forcing you to manually reconnect over and over again.
 
 ### 2. The PCIe Warm Reboot Power Freeze
 On laptops like the **HP 15-da series**, the motherboard maintains a small **trickle voltage** to the PCIe slot during a standard software restart. If the card falls into a deep sleep state right before shutdown, this standby power prevents the physical hardware registers from discharging. 
@@ -94,6 +94,8 @@ Once the installer prints its completion message, **do not click standard Restar
 ---
 
 ## 📋 System Requirements & Supported Chips
+
+*   **🔍 Testing & Hardware Validation:** Please note that this fix was explicitly developed and **physically tested on a Realtek RTL8723DE chip** (on an HP 15-da0325tu laptop). While the configuration paths dynamically adapt to scale across the whole driver family, user feedback for other modules is highly welcome!
 *   **Universal Driver Detection:** The script automatically probes your system to detect and fix your specific variant. It fully supports all Realtek `rtw88` device models:
     *   **RTL8723DE** (`rtw88_8723de`)
     *   **RTL8821CE** (`rtw88_8821ce`)
