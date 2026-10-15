@@ -47,7 +47,8 @@ echo -e "[connection]\nwifi.powersave = 2" | sudo tee /etc/NetworkManager/conf.d
 ExecStop=-/usr/bin/modprobe -r btusb
 ExecStop=-/usr/bin/modprobe -r $CHIP_MODULE
 ```
-*   **Why it's required:** The script automatically probes your running memory using `lsmod` to find your precise driver variant (e.g., `rtw88_8723de`). It maps that name into a custom systemd service that triggers the split-second you click restart. By forcefully unloading (`modprobe -r`) the Wi-Fi and Bluetooth drivers right before the machine reboots, it breaks the hardware loop early, ensuring the card initializes completely fresh on the next warm boot.
+*   **Why it's required:** The script automatically probes your running memory using `lsmod` to find your precise driver variant (e.g., `rtw88_8723de`). It maps that name into a custom systemd service that triggers the split-second you click restart. 
+*   **Combo Chip Architecture Tweak:** Laptops in the HP 15-da series utilize a **single-antenna Wi-Fi + Bluetooth combo chip**. Because both technologies share the same physical radio silicon, a hardware power freeze locks up both components simultaneously during a warm restart. This systemd service intercepts the shutdown target and forcefully unloads both the Bluetooth driver module (`btusb`) and the active wireless driver component (`modprobe -r`) at the exact same millisecond. Ripping them out together cuts the power-state link, forcing the shared combo chip to execute a clean physical reset so everything comes back online immediately on boot.
 
 #### 4. Clean User-Space Heartbeat (`wifi-keepalive.sh`)
 ```bash
@@ -95,7 +96,7 @@ Once the installer prints its completion message, **do not click standard Restar
 
 ## 📋 System Requirements & Supported Chips
 
-*   **🔍 Testing & Hardware Validation:** Please note that this fix was explicitly developed and **physically tested on a Realtek RTL8723DE chip** (on an HP 15-da0325tu laptop). While the configuration paths dynamically adapt to scale across the whole driver family, user feedback for other modules is highly welcome!
+*   **🔍 Testing & Hardware Validation:** Please note that this fix was explicitly developed and **physically tested on a Realtek RTL8723DE combo chip** (on an HP 15-da0325tu laptop). While the configuration paths dynamically adapt to scale across the whole driver family, user feedback for other modules is highly welcome!
 *   **Universal Driver Detection:** The script automatically probes your system to detect and fix your specific variant. It fully supports all Realtek `rtw88` device models:
     *   **RTL8723DE** (`rtw88_8723de`)
     *   **RTL8821CE** (`rtw88_8821ce`)
