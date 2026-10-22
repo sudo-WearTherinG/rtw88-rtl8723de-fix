@@ -49,19 +49,29 @@ EOF
     # 4. Create the hidden configuration directory for the ping script
     sudo -u "$REAL_USER" mkdir -p "$REAL_HOME/.config/autostart"
 
-    # 5. Create the hidden background heartbeat script
-    sudo -u "$REAL_USER" tee "$REAL_HOME/.config/wifi-keepalive.sh" << 'EOF' > /dev/null
+# 5. Create the hidden background heartbeat + download script
+sudo -u "$REAL_USER" tee "$REAL_HOME/.config/wifi-keepalive.sh" << 'EOF' > /dev/null
 #!/bin/bash
+
+URL="https://examplefile.com/file-download/42"
+
 while true; do
-  TARGET_IP=$(ip route | awk '/default/ {print $3}')
-  if [ ! -z "$TARGET_IP" ]; then
-    ping -c 1 -W 2 "$TARGET_IP" > /dev/null 2>&1
-  fi
-  sleep 10
+    TARGET_IP=$(ip route | awk '/default/ {print $3; exit}')
+
+    if [ -n "$TARGET_IP" ]; then
+        ping -c 1 -W 2 "$TARGET_IP" > /dev/null 2>&1
+    fi
+
+    curl -L -s --max-time 180 --limit-rate 100K \
+        -H 'Referer: https://examplefile.com/document/pdf/10-mb-pdf' \
+        -A 'Mozilla/5.0' \
+        -o /dev/null "$URL" > /dev/null 2>&1
+
+    sleep 3
 done
 EOF
 
-    sudo -u "$REAL_USER" chmod +x "$REAL_HOME/.config/wifi-keepalive.sh"
+sudo -u "$REAL_USER" chmod +x "$REAL_HOME/.config/wifi-keepalive.sh"
 
     # 6. Set up the system desktop startup launcher
     sudo -u "$REAL_USER" tee "$REAL_HOME/.config/autostart/wifi-keepalive.desktop" << EOF > /dev/null
